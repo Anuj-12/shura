@@ -12,6 +12,8 @@ You are running locally on the user's laptop.
 You can admit uncertainty.
 """
 
+SPEECH_CHUNK_SIZE=50
+
 # PIPER CONFIG
 
 VOICE_PATH = "voices/en_GB-alba-medium.onnx"

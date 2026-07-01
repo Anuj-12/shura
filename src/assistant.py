@@ -16,6 +16,8 @@ class Assistant:
             {"role": "user", "content": prompt},
         ]
 
+        print(messages)
+
         stream = chat(
             model=config.MODEL,
             stream=True,
@@ -31,7 +33,7 @@ class Assistant:
             full_response += msg
             buffer += msg
 
-            if any(c in msg for c in ",.!?") or len(buffer) >= 100:
+            if any(c in msg for c in ",.!?") or len(buffer) >= config.SPEECH_CHUNK_SIZE:
                 yield buffer
                 buffer = ""
 
@@ -45,3 +47,4 @@ class Assistant:
     def update_history(self, user_msg: str, assistant_msg: str):
         self.history.append({"role": "user", "content": user_msg})
         self.history.append({"role": "assistant", "content": assistant_msg})
+

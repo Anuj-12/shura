@@ -8,8 +8,7 @@ from speech import speak, sample_rate
 
 stream = sd.OutputStream(samplerate=sample_rate, channels=1)
 
-# Start and keep the stream open
-# don't do it for every section of audio
+# Start and keep the stream open till this runs
 stream.start()
 
 assistant = assistant.Assistant()
@@ -24,4 +23,8 @@ while(True):
         full_resp += sentence
 
     assistant.update_history(prompt, full_resp)
+    full_resp = ""
+
+    if any(c == prompt.lower() for c in ["bye", "quit"]):
+        break
 
