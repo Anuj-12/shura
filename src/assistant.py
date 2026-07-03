@@ -1,4 +1,5 @@
-from ollama import ChatResponse, chat
+from ollama import chat
+from tools.registry import get_tool_schemas
 import config
 
 class Assistant:
@@ -21,8 +22,9 @@ class Assistant:
         stream = chat(
             model=config.MODEL,
             stream=True,
-            think=False,
             messages=messages,
+            think=False,
+            tools=get_tool_schemas()
         )
 
         for chunk in stream:
