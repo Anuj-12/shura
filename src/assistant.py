@@ -1,5 +1,6 @@
 from os import name
 from ollama import chat
+from tools import ToolError
 from tools.registry import get_tool_schemas
 from tools.registry import TOOLS
 import config
@@ -21,8 +22,7 @@ class Assistant:
 
         #print(messages)
 
-        #--- TOOL CALLING STARTS---
-
+        """ TOOL CALLING """
         tool_check = chat(
             model=config.MODEL,
             stream=False,
@@ -37,12 +37,22 @@ class Assistant:
                 tool = TOOLS[tc.function.name]
                 try:
                     result = tool.execute(tc.function.arguments)
-                    messages.append({'role': 'tool', 'tool_name': tc.function.name, 'content': str(result["result"])})
+                    messages.append({
+                        'role': 'tool',
+                        'tool_name': tc.function.name,
+                        'content': str(result["result"])
+                        })
+                except ToolError as e:
+                    messages.append({
+                        'role': 'tool',
+                        'tool_name': tc.function.name,
+                        'content': "Tool failed to execute"
+                        })
                 except Exception as e:
                     print(e)
 
-        #--- TOOL CALLING ENDS ---
         
+        """ STREAMING BUFFER """
         stream = chat(
             model=config.MODEL,
             stream=True,

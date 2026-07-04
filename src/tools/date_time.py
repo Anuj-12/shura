@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Mapping, Any
 from tools import tool
 
 class DateTimeTool(tool.ToolInterface):
@@ -20,7 +21,7 @@ class DateTimeTool(tool.ToolInterface):
                 "required": []
                 }
 
-    def execute(self, arguments:dict) -> dict:
+    def execute(self, arguments:Mapping[str, Any]) -> dict:
 
         now = datetime.now()
 

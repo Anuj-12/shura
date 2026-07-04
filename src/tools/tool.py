@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Mapping, Any
 # ABC -> Abstract Base Class
 
 class ToolInterface(ABC):
@@ -21,5 +22,7 @@ class ToolInterface(ABC):
         pass
 
     @abstractmethod
-    def execute(self, arguments:dict) -> dict:
+    # Mapping = anything that behaves like a dictionary
+    # Any = No type checking for that value
+    def execute(self, arguments: Mapping[str, Any]) -> dict:
         pass
