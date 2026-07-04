@@ -3,7 +3,6 @@ import assistant
 from speech import speak, sample_rate
 from enum import Enum
 
-
 # write → buffer → background thread → speakers
 
 #class States(Enum):

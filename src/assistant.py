@@ -1,5 +1,7 @@
+from os import name
 from ollama import chat
 from tools.registry import get_tool_schemas
+from tools.registry import TOOLS
 import config
 
 class Assistant:
@@ -17,13 +19,35 @@ class Assistant:
             {"role": "user", "content": prompt},
         ]
 
-        print(messages)
+        #print(messages)
 
+        #--- TOOL CALLING STARTS---
+
+        tool_check = chat(
+            model=config.MODEL,
+            stream=False,
+            think=False,
+            messages=messages,
+            tools=get_tool_schemas()
+        )
+
+        if(tool_check.message.tool_calls):
+            for tc in tool_check.message.tool_calls:
+                # Get the tool's instance
+                tool = TOOLS[tc.function.name]
+                try:
+                    result = tool.execute(tc.function.arguments)
+                    messages.append({'role': 'tool', 'tool_name': tc.function.name, 'content': str(result["result"])})
+                except Exception as e:
+                    print(e)
+
+        #--- TOOL CALLING ENDS ---
+        
         stream = chat(
             model=config.MODEL,
             stream=True,
-            messages=messages,
             think=False,
+            messages=messages,
             tools=get_tool_schemas()
         )
 
@@ -49,4 +73,5 @@ class Assistant:
     def update_history(self, user_msg: str, assistant_msg: str):
         self.history.append({"role": "user", "content": user_msg})
         self.history.append({"role": "assistant", "content": assistant_msg})
+
 

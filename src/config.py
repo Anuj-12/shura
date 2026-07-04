@@ -1,4 +1,4 @@
-MODEL = "gemma3:4b"
+MODEL = "llama3.1:8b"
 
 SYSTEM_PROMPT = f"""
 You are **Shura**, a personal AI assistant running locally on the Anuj's laptop.
@@ -45,7 +45,7 @@ SPEECH_CHUNK_SIZE=90
 
 # PIPER CONFIG
 
-VOICE_PATH = "voices/en_GB-alba-medium.onnx"
+VOICE_PATH = "../voices/en_GB-alba-medium.onnx"
 
 
 VOLUME=0.5,  # half as loud

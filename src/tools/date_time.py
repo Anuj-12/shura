@@ -28,7 +28,7 @@ class DateTimeTool(tool.ToolInterface):
             "success": True,
             "result": {
                 "date": now.strftime("%d-%m-%Y"),
-                "time": now.strftime("%H:%M"),
+                "time": now.strftime("%I:%M %p"),
                 "weekday": now.strftime("%A"),
             }
         }
