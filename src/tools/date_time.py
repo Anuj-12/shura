@@ -9,7 +9,11 @@ class DateTimeTool(tool.ToolInterface):
 
     @property
     def description(self) -> str:
-        return "Returns the current local date, time and day of the week."
+        return """
+        Returns the current local date, current local time, and day of the week.
+        Use only when the user explicitly asks for the current date, time, day, or
+        information that depends on the current date or time.
+        """
 
     @property
     def parameters(self) -> dict:

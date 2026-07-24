@@ -3,8 +3,7 @@ from piper import PiperVoice
 
 # write → buffer → background thread → speakers
 
-
-voice = PiperVoice.load(config.VOICE_PATH)
+voice = PiperVoice.load(config.ENG_VOICE_PATH)
 sample_rate = voice.config.sample_rate
 # print(type(voice.config))
 

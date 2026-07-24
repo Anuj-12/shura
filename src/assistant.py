@@ -1,4 +1,3 @@
-from os import name
 from ollama import chat
 from tools import ToolError
 from tools.registry import get_tool_schemas
@@ -58,7 +57,6 @@ class Assistant:
             stream=True,
             think=False,
             messages=messages,
-            tools=get_tool_schemas()
         )
 
         for chunk in stream:
