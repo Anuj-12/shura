@@ -48,7 +48,7 @@ while(True):
     else:
         print("Speech not detected")
         continue
-    #prompt = "Hello, what is your name? I think you are my PA... what is the time then?"
+    prompt = "Hello, what is your name? I think you are my PA... what is the time then?"
 
     if prompt is None:
         continue
@@ -60,6 +60,7 @@ while(True):
         full_resp += sentence
 
     assistant.update_history(prompt, full_resp)
+    print(full_resp)
     full_resp = ""
 
     if any(c == prompt.lower() for c in ["bye", "quit"]):
