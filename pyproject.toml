@@ -8,6 +8,9 @@ dependencies = [
     "faster-whisper>=1.2.1",
     "ollama>=0.6.2",
     "piper-tts>=1.4.2",
+    "silero-vad>=6.2.1",
     "sounddevice>=0.5.5",
     "torch>=2.12.1",
+    "torchcodec>=0.15.0",
+    "webrtcvad>=2.0.10",
 ]

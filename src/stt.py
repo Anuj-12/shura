@@ -36,7 +36,7 @@ def listen(stream: sd.InputStream):
         #print("Calling Whisper")
         # Make all the individual signals a single signal
         audio = np.concatenate(capture_buffer, axis=0).squeeze()
-        segments, info = model.transcribe(audio, vad_filter=True)
+        segments, info = model.transcribe(audio)
         print(f"{samples / TTS_SAMPLE_RATE:.2f} seconds")
 
         text = ""

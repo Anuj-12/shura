@@ -49,7 +49,6 @@ class Assistant:
                         })
                 except Exception as e:
                     print(e)
-
         
         """ STREAMING BUFFER """
         stream = chat(

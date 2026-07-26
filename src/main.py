@@ -1,9 +1,11 @@
 from numpy import float32
+from pydantic import ValidationError
 import sounddevice as sd 
 import assistant
 from config import TTS_CHANNELS, TTS_SAMPLE_RATE
 from tts import speak, sample_rate
 from stt import listen
+from vad import is_speech
 from enum import Enum
 
 # write → buffer → background thread → speakers
@@ -28,14 +30,30 @@ assistant = assistant.Assistant()
 
 full_resp = ""
 
+capture_buffer = []
+frame_duration = 480
+
 print("Speak:")
 while(True):
-    prompt = listen(stream_in)
-    #prompt = "Hello"
-    
-    while prompt is None:
-        prompt = listen(stream_in)
+    frame, overflowed = stream_in.read(frame_duration)
+    # print(frame.dtype)
+    # print(frame.shape)
+    if(overflowed):
+        print("Audio overflowed")
 
+
+    if(is_speech(frame)):
+        print("Speech detected")
+        prompt = listen(stream_in)
+    else:
+        print("Speech not detected")
+        continue
+    #prompt = "Hello, what is your name? I think you are my PA... what is the time then?"
+
+    if prompt is None:
+        continue
+
+    # repr prints the string with '\n' and stuff
     print(repr(prompt))
     for sentence in assistant.ask(prompt):
         speak(sentence, stream_out)
