@@ -11,7 +11,7 @@ from faster_whisper import WhisperModel
 
 from config import TTS_SAMPLE_RATE
 
-model_size = "tiny"
+model_size = "small.en"
 
 model = WhisperModel(model_size, device="cpu", compute_type="int8")
 

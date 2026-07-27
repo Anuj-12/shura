@@ -10,20 +10,13 @@ from enum import Enum
 
 # write → buffer → background thread → speakers
 
-#class States(Enum):
-#    IDLE = 0
-#    LISTENING = 1t
-#    THINKING = 2
-#    SPEAKING = 3
-#    TOOL_USE = 4
+speech_counter = 0
 
-#state = States.IDLE
+stream_out = sd.OutputStream(samplerate=sample_rate, channels=1)
+stream_in = sd.InputStream(samplerate=TTS_SAMPLE_RATE, channels=TTS_CHANNELS, dtype=float32)
 
 # Start and keep the stream open 
-stream_out = sd.OutputStream(samplerate=sample_rate, channels=1)
 stream_out.start()
-
-stream_in = sd.InputStream(samplerate=TTS_SAMPLE_RATE, channels=TTS_CHANNELS, dtype=float32)
 stream_in.start()
 
 assistant = assistant.Assistant()
@@ -42,16 +35,17 @@ while(True):
         print("Audio overflowed")
 
 
-    if(is_speech(frame)):
-        print("Speech detected")
-        prompt = listen(stream_in)
-    else:
-        print("Speech not detected")
-        continue
-    prompt = "Hello, what is your name? I think you are my PA... what is the time then?"
-
-    if prompt is None:
-        continue
+    while speech_counter < 7:
+        if(is_speech(frame)):
+            print("Speech detected")
+            speech_counter += 1
+            
+        frame, overflowed = stream_in.read(frame_duration)
+        if(overflowed):
+            print("Audio overflowed")
+    
+    #Prompt can't be None
+    prompt = listen(stream_in)
 
     # repr prints the string with '\n' and stuff
     print(repr(prompt))

@@ -5,7 +5,7 @@ import sounddevice as sd
 
 # Agressiveness mode for filtering non-speech
 # 1- no filtering, 3 - high filtering
-vad = webrtcvad.Vad(1)
+vad = webrtcvad.Vad(2)
 
 # Stream captures frames as float32 and sends them over to VAD
 # VAD converts to int16 and decides if the frame contains speech or just noise

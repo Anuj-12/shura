@@ -1,3 +1,5 @@
-- [ ]  Fix tool calling for time
-- [ ] Finish VAD implementation
+- [ ] Fix Ollama hang
+- [ ] Fix tool calling for time
+
+- [x] Finish VAD implementation
 
