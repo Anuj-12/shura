@@ -13,7 +13,6 @@ import vad
 # write → buffer → background thread → speakers
 
 """ FSM CONFIGURATION """
-
 class State(Enum):
     WAITING = auto()
     RECORDING = auto()
@@ -49,7 +48,6 @@ trans_table = {
 
 
 """ STREAM CONFIGURATION """
-
 stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=1)
 stream_in = sd.InputStream(samplerate=TTS_SAMPLE_RATE, channels=TTS_CHANNELS, dtype=float32)
 
@@ -59,7 +57,6 @@ stream_in.start()
 
 
 """ FSM BASED IMPLEMENTATION """
-
 state = State.WAITING
 
 assistant = assistant.Assistant()
@@ -82,6 +79,7 @@ while(True):
         event = Event.SPEECH_ENDED
 
     """ STATE TRANSITION LOGIC """
+    # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:
         if transition.action:
