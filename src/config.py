@@ -70,6 +70,7 @@ NORMALIZE_AUDIO=False, # use raw audio from voice
 
 TTS_SAMPLE_RATE=16_000
 TTS_CHANNELS=1
+FRAME_DURATION=480
 
 
 #-----VAD CONFIG-----

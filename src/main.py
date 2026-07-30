@@ -1,64 +1,91 @@
-from numpy import float32
-from pydantic import ValidationError
+from dataclasses import dataclass
+from numpy import dtype, float32
+from enum import Enum, auto
 import sounddevice as sd 
+from typing import Callable
+
 import assistant
-from config import TTS_CHANNELS, TTS_SAMPLE_RATE
-from tts import speak, sample_rate
-from stt import listen
-from vad import is_speech
-from enum import Enum
+from config import FRAME_DURATION, TTS_CHANNELS, TTS_SAMPLE_RATE
+import tts
+import stt
+import vad
 
 # write → buffer → background thread → speakers
 
-speech_counter = 0
+""" FSM CONFIGURATION """
 
-stream_out = sd.OutputStream(samplerate=sample_rate, channels=1)
+class State(Enum):
+    WAITING = auto()
+    RECORDING = auto()
+    TRANSCRIBING = auto()
+    RESPONDING = auto()
+
+class Event(Enum):
+    SPEECH_STARTED = auto()
+    SPEECH_ENDED = auto()
+    TRANSCRIPTION_ENDED = auto()
+    RESPONSE_DONE = auto()
+    EVENT_NONE = auto()
+
+# Makes it behave like struct
+@dataclass()
+class Transition:
+    next_state:  State
+    action: Callable | None = None
+
+trans_table = {
+    (State.WAITING, Event.SPEECH_STARTED):
+        Transition(State.RECORDING, start_recording),
+
+    (State.RECORDING, Event.SPEECH_ENDED):
+        Transition(State.TRANSCRIBING, stop_recording),
+
+    (State.TRANSCRIBING, Event.TRANSCRIPTION_ENDED):
+        Transition(State.RESPONDING, respond),
+
+    (State.RESPONDING, Event.RESPONSE_DONE):
+        Transition(State.WAITING, reset),
+}
+
+
+""" STREAM CONFIGURATION """
+
+stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=1)
 stream_in = sd.InputStream(samplerate=TTS_SAMPLE_RATE, channels=TTS_CHANNELS, dtype=float32)
 
 # Start and keep the stream open 
 stream_out.start()
 stream_in.start()
 
+
+""" FSM BASED IMPLEMENTATION """
+
+state = State.WAITING
+
 assistant = assistant.Assistant()
+speech_counter = 0
 
 full_resp = ""
-
 capture_buffer = []
-frame_duration = 480
 
 print("Speak:")
 while(True):
-    frame, overflowed = stream_in.read(frame_duration)
-    # print(frame.dtype)
-    # print(frame.shape)
-    if(overflowed):
-        print("Audio overflowed")
+    """ POLLING FOR EVENTS """
+    frame, overflow = stream_in.read(FRAME_DURATION)
 
+    event : Event = Event.EVENT_NONE
 
-    while speech_counter < 7:
-        if(is_speech(frame)):
-            print("Speech detected")
-            speech_counter += 1
-            
-        frame, overflowed = stream_in.read(frame_duration)
-        if(overflowed):
-            print("Audio overflowed")
-    
-    #Prompt can't be None
-    prompt = listen(stream_in)
+    if vad.detect_start(frame):
+        event = Event.SPEECH_STARTED
 
-    # repr prints the string with '\n' and stuff
-    print(repr(prompt))
-    for sentence in assistant.ask(prompt):
-        speak(sentence, stream_out)
-        full_resp += sentence
+    if vad.detect_end(frame):
+        event = Event.SPEECH_ENDED
 
-    assistant.update_history(prompt, full_resp)
-    print(full_resp)
-    full_resp = ""
+    """ STATE TRANSITION LOGIC """
+    transition = trans_table.get((state, event))
+    if transition:
+        if transition.action:
+            transition.action(frame)
 
-    if any(c == prompt.lower() for c in ["bye", "quit"]):
-        stream_in.stop()
-        stream_out.stop()
-        break
+        state = transition.next_state
 
