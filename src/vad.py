@@ -20,6 +20,8 @@ def detect_start(frame: np.ndarray) -> bool:
     # such as 0.6, 0.72 = 0, the largest 16 bit signed no. is 32768
     # so conversion with the product of float frame * 32767 gives a usable int frame
     frame = np.squeeze(frame)
+    # Another quantization step 
+    # ADC already quantizes once
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
     curr_frame_is_speech = vad.is_speech(vad_frame, config.VAD_SAMPLE_RATE)
@@ -34,9 +36,6 @@ def detect_start(frame: np.ndarray) -> bool:
 def detect_end(frame: np.ndarray) -> bool:
     global silence_cnt
 
-    # because straight up .astype(int16) would give values
-    # such as 0.6, 0.72 = 0, the largest 16 bit signed no. is 32768
-    # so conversion with the product of float frame * 32767 gives a usable int frame
     frame = np.squeeze(frame)
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
