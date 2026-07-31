@@ -7,7 +7,7 @@ from typing import Callable
 import assistant
 from config import FRAME_DURATION, TTS_CHANNELS, TTS_SAMPLE_RATE
 import tts
-import stt
+from stt import start_recording, stop_recording
 import vad
 
 # write → buffer → background thread → speakers
@@ -68,9 +68,8 @@ capture_buffer = []
 print("Speak:")
 while(True):
     """ POLLING FOR EVENTS """
-    frame, overflow = stream_in.read(FRAME_DURATION)
-
     event : Event = Event.EVENT_NONE
+    frame, overflow = stream_in.read(FRAME_DURATION)
 
     if vad.detect_start(frame):
         event = Event.SPEECH_STARTED
@@ -86,4 +85,3 @@ while(True):
             transition.action(frame)
 
         state = transition.next_state
-
