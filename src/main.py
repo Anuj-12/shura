@@ -1,13 +1,14 @@
 from dataclasses import dataclass
-from numpy import dtype, float32
+from numpy import dtype, float32, full
 from enum import Enum, auto
 import sounddevice as sd 
 from typing import Callable
 
-import assistant
-from config import FRAME_DURATION, TTS_CHANNELS, TTS_SAMPLE_RATE
+from config import CHANNELS, FRAME_DURATION, SAMPLE_RATE 
+
 import tts
-from stt import start_recording, stop_recording
+import stt
+import assistant
 import vad
 
 # write → buffer → background thread → speakers
@@ -32,24 +33,10 @@ class Transition:
     next_state:  State
     action: Callable | None = None
 
-trans_table = {
-    (State.WAITING, Event.SPEECH_STARTED):
-        Transition(State.RECORDING, start_recording),
-
-    (State.RECORDING, Event.SPEECH_ENDED):
-        Transition(State.TRANSCRIBING, stop_recording),
-
-    (State.TRANSCRIBING, Event.TRANSCRIPTION_ENDED):
-        Transition(State.RESPONDING, respond),
-
-    (State.RESPONDING, Event.RESPONSE_DONE):
-        Transition(State.WAITING, reset),
-}
-
 
 """ STREAM CONFIGURATION """
-stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=1)
-stream_in = sd.InputStream(samplerate=TTS_SAMPLE_RATE, channels=TTS_CHANNELS, dtype=float32)
+stream_out = sd.OutputStream(samplerate=SAMPLE_RATE, channels=CHANNELS)
+stream_in = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, dtype=float32)
 
 # Start and keep the stream open 
 stream_out.start()
@@ -59,29 +46,64 @@ stream_in.start()
 """ FSM BASED IMPLEMENTATION """
 state = State.WAITING
 
-assistant = assistant.Assistant()
-speech_counter = 0
-
+# Have to build the full response to append to the history
 full_resp = ""
-capture_buffer = []
+prompt = ""
+
+def record():
+    # Giving stt the stream bcz it needs its own frame duration
+    stt.record(stream_in)
+
+def transcribe():
+    global prompt
+    prompt = stt.transcribe()
+
+def respond():
+    global prompt
+    global full_resp
+    print(prompt)
+
+    for sentence in assistant.ask(prompt):
+        tts.speak(sentence, stream_out)
+        full_resp += sentence
+
+def update_history():
+    assistant.update_history(prompt, full_resp)
+
+trans_table = {
+    (State.WAITING, Event.SPEECH_STARTED):
+        Transition(State.RECORDING, record),
+
+    (State.RECORDING, Event.SPEECH_ENDED):
+        Transition(State.TRANSCRIBING, transcribe),
+
+    (State.TRANSCRIBING, Event.TRANSCRIPTION_ENDED):
+        Transition(State.RESPONDING, respond),
+
+    (State.RESPONDING, Event.RESPONSE_DONE):
+        Transition(State.WAITING, update_history),
+}
 
 print("Speak:")
 while(True):
     """ POLLING FOR EVENTS """
-    event : Event = Event.EVENT_NONE
+    event: Event = Event.EVENT_NONE
     frame, overflow = stream_in.read(FRAME_DURATION)
 
     if vad.detect_start(frame):
         event = Event.SPEECH_STARTED
-
-    if vad.detect_end(frame):
+    elif vad.detect_end(frame):
         event = Event.SPEECH_ENDED
+    elif stt.transcription_done():
+        event = Event.TRANSCRIPTION_ENDED;
+    elif assistant.response_done():
+        event = Event.RESPONSE_DONE
 
     """ STATE TRANSITION LOGIC """
     # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:
         if transition.action:
-            transition.action(frame)
+            transition.action()
 
         state = transition.next_state

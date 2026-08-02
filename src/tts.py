@@ -1,9 +1,9 @@
-import config
+from config import ENG_VOICE_PATH
 from piper import PiperVoice
 
 # write → buffer → background thread → speakers
 
-voice = PiperVoice.load(config.ENG_VOICE_PATH)
+voice = PiperVoice.load(ENG_VOICE_PATH)
 sample_rate = voice.config.sample_rate
 # print(type(voice.config))
 

@@ -10,13 +10,14 @@ import sounddevice as sd
 import numpy as np
 from faster_whisper import WhisperModel
 
-model_size = "small.en"
+model_size = "medium.en"
 
 model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
+_transcription_done: bool = False;
 capture_buffer: List = []
 
-def start_recording(stream: sd.InputStream):
+def record(stream: sd.InputStream) -> None:
     global capture_buffer
     # frames / sample_rate = seconds of audio
     # 1024 / 16_000 = 64ms of audio
@@ -29,8 +30,10 @@ def start_recording(stream: sd.InputStream):
     capture_buffer.append(frames)
 
 
-def stop_recording():
+def transcribe() -> str:
     global capture_buffer
+    global _transcription_done
+    _transcription_done = False
     
     # Make all the individual signals a single signal
     audio = np.concatenate(capture_buffer, axis=0).squeeze()
@@ -43,5 +46,16 @@ def stop_recording():
         text += segment.text
         
     capture_buffer.clear()
-
+    _transcription_done = True
+    
     return text   
+
+def transcription_done() -> bool:
+    global _transcription_done
+
+    if _transcription_done:
+        _transcription_done = False
+        return True
+
+    return False
+

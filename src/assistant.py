@@ -4,81 +4,90 @@ from tools.registry import get_tool_schemas
 from tools.registry import TOOLS
 import config
 
-class Assistant:
-    def __init__(self):
-        self.history = []
+_response_done = False
+_history = []
 
-    def ask(self, prompt: str):
-        buffer = ""
-        full_response = ""
+def ask(prompt: str):
+    global _response_done
+    _response_done = False
 
-        messages = [
-            {"role": "system", "content": config.SYSTEM_PROMPT},
-            # List unpacking 
-            *self.history,
-            {"role": "user", "content": prompt},
-        ]
+    buffer = ""
+    full_response = ""
 
-        #print(messages)
+    messages = [
+        {"role": "system", "content": config.SYSTEM_PROMPT},
+        # List unpacking 
+        *_history,
+        {"role": "user", "content": prompt},
+    ]
 
-        """ TOOL CALLING """
-        tool_check = chat(
-            model=config.MODEL,
-            stream=False,
-            think=False,
-            messages=messages,
-            tools=get_tool_schemas()
-        )
+    #print(messages)
 
-        if(tool_check.message.tool_calls):
-            for tc in tool_check.message.tool_calls:
-                # Get the tool's instance
-                tool = TOOLS[tc.function.name]
-                try:
-                    result = tool.execute(tc.function.arguments)
-                    messages.append({
-                        'role': 'tool',
-                        'tool_name': tc.function.name,
-                        'content': str(result["result"])
-                        })
-                except ToolError as e:
-                    messages.append({
-                        'role': 'tool',
-                        'tool_name': tc.function.name,
-                        'content': "Tool failed to execute"
-                        })
-                except Exception as e:
-                    print(e)
-        
-        """ STREAMING BUFFER """
-        stream = chat(
-            model=config.MODEL,
-            stream=True,
-            think=False,
-            messages=messages,
-        )
+    """ TOOL CALLING """
+    tool_check = chat(
+        model=config.MODEL,
+        stream=False,
+        think=False,
+        messages=messages,
+        tools=get_tool_schemas()
+    )
 
-        for chunk in stream:
-            msg = chunk.message.content
-            if msg is None:
-                continue
+    if tool_check.message.tool_calls:
+        for tc in tool_check.message.tool_calls:
+            # Get the tool's instance
+            tool = TOOLS[tc.function.name]
+            try:
+                result = tool.execute(tc.function.arguments)
+                messages.append({
+                    'role': 'tool',
+                    'tool_name': tc.function.name,
+                    'content': str(result["result"])
+                    })
+            except ToolError as e:
+                messages.append({
+                    'role': 'tool',
+                    'tool_name': tc.function.name,
+                    'content': "Tool failed to execute"
+                    })
+            except Exception as e:
+                print(e)
+    
+    """ STREAMING BUFFER """
+    stream = chat(
+        model=config.MODEL,
+        stream=True,
+        think=False,
+        messages=messages,
+    )
 
-            full_response += msg
-            buffer += msg
+    for chunk in stream:
+        msg = chunk.message.content
+        if msg is None:
+            continue
 
-            if any(c in msg for c in ",.!?") or len(buffer) >= config.SPEECH_CHUNK_SIZE:
-                yield buffer
-                buffer = ""
+        full_response += msg
+        buffer += msg
 
-        # flush remaining speech buffer
-        if buffer:
+        if any(c in msg for c in ",.!?") or len(buffer) >= config.SPEECH_CHUNK_SIZE:
             yield buffer
+            buffer = ""
 
-        # For mem update
-        return full_response
+    # flush remaining speech buffer
+    if buffer:
+        yield buffer
 
-    def update_history(self, user_msg: str, assistant_msg: str):
-        self.history.append({"role": "user", "content": user_msg})
-        self.history.append({"role": "assistant", "content": assistant_msg})
+    _response_done = True
 
+def update_history(user_msg: str, assistant_msg: str):
+    _history.append({"role": "user", "content": user_msg})
+    _history.append({"role": "assistant", "content": assistant_msg})
 
+def response_done():
+    # Fire it once like an interrupt
+    global _response_done
+
+    if _response_done:
+        _response_done = False
+        return True
+
+    return False

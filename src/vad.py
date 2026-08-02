@@ -5,7 +5,7 @@ import sounddevice as sd
 
 # Agressiveness mode for filtering non-speech
 # 1- no filtering, 3 - high filtering
-vad = webrtcvad.Vad(2)
+vad = webrtcvad.Vad(3)
 
 speech_cnt = 0
 silence_cnt = 0
@@ -24,9 +24,10 @@ def detect_start(frame: np.ndarray) -> bool:
     # ADC already quantizes once
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
-    curr_frame_is_speech = vad.is_speech(vad_frame, config.VAD_SAMPLE_RATE)
+    curr_frame_is_speech = vad.is_speech(vad_frame, config.SAMPLE_RATE)
 
     if curr_frame_is_speech:
+        print("Speech Detected")
         speech_cnt += 1
     else:
         speech_cnt = 0
@@ -39,11 +40,12 @@ def detect_end(frame: np.ndarray) -> bool:
     frame = np.squeeze(frame)
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
-    curr_frame_is_speech = vad.is_speech(vad_frame, config.VAD_SAMPLE_RATE)
+    curr_frame_is_speech = vad.is_speech(vad_frame, config.SAMPLE_RATE)
 
     if curr_frame_is_speech:
         silence_cnt = 0
     else:
+        print("Silence Detected")
         silence_cnt += 1
 
     return silence_cnt >= 7
