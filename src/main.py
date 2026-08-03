@@ -50,24 +50,23 @@ state = State.WAITING
 full_resp = ""
 prompt = ""
 
-def record():
-    # Giving stt the stream bcz it needs its own frame duration
-    stt.record(stream_in)
+def record(frame):
+    stt.record(frame)
 
-def transcribe():
+def transcribe(frame):
     global prompt
     prompt = stt.transcribe()
 
-def respond():
+def respond(frame):
     global prompt
     global full_resp
-    print(prompt)
+    # print(repr(prompt))
 
     for sentence in assistant.ask(prompt):
         tts.speak(sentence, stream_out)
         full_resp += sentence
 
-def update_history():
+def update_history(frame):
     assistant.update_history(prompt, full_resp)
 
 trans_table = {
@@ -104,6 +103,9 @@ while(True):
     transition = trans_table.get((state, event))
     if transition:
         if transition.action:
-            transition.action()
+            transition.action(frame)
 
         state = transition.next_state
+
+    if state == State.RECORDING:
+        record(frame)

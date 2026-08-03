@@ -65,6 +65,7 @@ def ask(prompt: str):
         if msg is None:
             continue
 
+        #print(repr(chunk.message.content));
         full_response += msg
         buffer += msg
 
