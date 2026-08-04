@@ -75,8 +75,6 @@ def ask(prompt: str):
             yield buffer
             buffer = ""
 
-    print("Buffer completed")
-
     # flush remaining speech buffer
     if buffer:
         yield buffer

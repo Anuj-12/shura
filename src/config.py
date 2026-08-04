@@ -17,7 +17,6 @@ SPEECH_CHUNK_SIZE=90
 ENG_VOICE_PATH = "../voices/en_GB-alba-medium.onnx"
 GER_VOICE_PATH = "../voices/de_DE-thorsten-high.onnx"
 
-
 VOLUME=0.5,  # half as loud
 LENGTH_SCALE=1.0,  # speed x1
 NOISE_SCALE=1.0,  # more audio variation
@@ -27,6 +26,6 @@ NORMALIZE_AUDIO=False, # use raw audio from voice
 
 #-----STT CONFIG-----
 
-SAMPLE_RATE=16_000
+STT_SAMPLE_RATE=16_000
 CHANNELS=1
 FRAME_DURATION=480

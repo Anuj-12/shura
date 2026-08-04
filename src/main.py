@@ -4,12 +4,14 @@ from enum import Enum, auto
 import sounddevice as sd 
 from typing import Callable
 
-from config import CHANNELS, FRAME_DURATION, SAMPLE_RATE 
+from config import CHANNELS, FRAME_DURATION, STT_SAMPLE_RATE
 
 import tts
 import stt
 import assistant
 import vad
+
+TTS_SAMPLE_RATE = tts.sample_rate
 
 # write → buffer → background thread → speakers
 
@@ -35,13 +37,12 @@ class Transition:
 
 
 """ STREAM CONFIGURATION """
-stream_out = sd.OutputStream(samplerate=SAMPLE_RATE, channels=CHANNELS)
-stream_in = sd.InputStream(samplerate=SAMPLE_RATE, channels=CHANNELS, dtype=float32)
+stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
+stream_in = sd.InputStream(samplerate=STT_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
 
 # Start and keep the stream open 
 stream_out.start()
 stream_in.start()
-
 
 """ FSM BASED IMPLEMENTATION """
 state = State.WAITING
@@ -63,7 +64,7 @@ def respond(frame):
 
     if not prompt.strip():
         return
-
+    
     print(repr(prompt))
 
     for sentence in assistant.ask(prompt):

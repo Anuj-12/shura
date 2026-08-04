@@ -23,7 +23,7 @@ def detect_start(frame: np.ndarray) -> bool:
     # ADC already quantizes once
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
-    curr_frame_is_speech = vad.is_speech(vad_frame, config.SAMPLE_RATE)
+    curr_frame_is_speech = vad.is_speech(vad_frame, config.STT_SAMPLE_RATE)
 
     if curr_frame_is_speech:
         print("Speech Detected")
@@ -39,7 +39,7 @@ def detect_end(frame: np.ndarray) -> bool:
     frame = np.squeeze(frame)
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
-    curr_frame_is_speech = vad.is_speech(vad_frame, config.SAMPLE_RATE)
+    curr_frame_is_speech = vad.is_speech(vad_frame, config.STT_SAMPLE_RATE)
 
     if curr_frame_is_speech:
         silence_cnt = 0
