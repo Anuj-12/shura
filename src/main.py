@@ -60,16 +60,21 @@ def transcribe(frame):
 def respond(frame):
     global prompt
     global full_resp
+
+    if not prompt.strip():
+        return
+
     print(repr(prompt))
 
     for sentence in assistant.ask(prompt):
         tts.speak(sentence, stream_out)
         full_resp += sentence
 
-    print(full_resp)
 
 def update_history(frame):
+    global full_resp
     assistant.update_history(prompt, full_resp)
+    full_resp = ""
 
 trans_table = {
     (State.WAITING, Event.SPEECH_STARTED):
