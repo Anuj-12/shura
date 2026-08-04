@@ -60,11 +60,13 @@ def transcribe(frame):
 def respond(frame):
     global prompt
     global full_resp
-    # print(repr(prompt))
+    print(repr(prompt))
 
     for sentence in assistant.ask(prompt):
         tts.speak(sentence, stream_out)
         full_resp += sentence
+
+    print(full_resp)
 
 def update_history(frame):
     assistant.update_history(prompt, full_resp)

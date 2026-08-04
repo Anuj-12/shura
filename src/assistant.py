@@ -8,8 +8,10 @@ _response_done = False
 _history = []
 
 def ask(prompt: str):
+    print("Entered ask")
     global _response_done
     _response_done = False
+    print("Passed response_done flag")
 
     buffer = ""
     full_response = ""
@@ -20,8 +22,6 @@ def ask(prompt: str):
         *_history,
         {"role": "user", "content": prompt},
     ]
-
-    #print(messages)
 
     """ TOOL CALLING """
     tool_check = chat(
@@ -50,7 +50,7 @@ def ask(prompt: str):
                     'content': "Tool failed to execute"
                     })
             except Exception as e:
-                print(e)
+                print("Error in tool calling")
     
     """ STREAMING BUFFER """
     stream = chat(
@@ -60,18 +60,22 @@ def ask(prompt: str):
         messages=messages,
     )
 
+    print(messages)
+
     for chunk in stream:
         msg = chunk.message.content
         if msg is None:
             continue
 
-        #print(repr(chunk.message.content));
+        print(repr(chunk.message.content));
         full_response += msg
         buffer += msg
 
         if any(c in msg for c in ",.!?") or len(buffer) >= config.SPEECH_CHUNK_SIZE:
             yield buffer
             buffer = ""
+
+    print("Buffer completed")
 
     # flush remaining speech buffer
     if buffer:

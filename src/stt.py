@@ -35,8 +35,7 @@ def transcribe() -> str:
     
     # Make all the individual signals a single signal
     audio = np.concatenate(capture_buffer, axis=0).squeeze()
-    #save_wav("debug.wav", audio)
-    print(len(capture_buffer))
+    save_wav("debug.wav", audio)
     segments, info = model.transcribe(audio)
 
     text = ""
