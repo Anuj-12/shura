@@ -36,3 +36,9 @@ The goal of the project is to create a fast, modular assistant that runs entirel
 ## Status
 
 This project is actively under development and the architecture is evolving as new features are added.
+
+## Known Issues
+
+- STT may occasionally stop detecting speech until restarted.
+- First word of an utterance may be clipped.
+- Tool selection is still conservative and occasionally unnecessary.
