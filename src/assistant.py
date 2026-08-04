@@ -71,7 +71,7 @@ def ask(prompt: str):
         full_response += msg
         buffer += msg
 
-        if any(c in msg for c in ",.!?") or len(buffer) >= config.SPEECH_CHUNK_SIZE:
+        if any(c in msg for c in ",.!?") and len(buffer) >= config.SPEECH_CHUNK_SIZE:
             yield buffer
             buffer = ""
 

@@ -10,7 +10,7 @@ If you don't know something, say so honestly rather than guessing.
 Keep your responses conversational, practical, and efficient.
 """
 
-SPEECH_CHUNK_SIZE=90
+SPEECH_CHUNK_SIZE=30
 
 #-----TTS CONFIG-----
 
