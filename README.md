@@ -12,10 +12,10 @@ The goal of the project is to create a fast, modular assistant that runs entirel
 * 🛠️ Tool calling
 * 🎧 Voice Activity Detection (WebRTC VAD)
 * ⚡ Streaming responses
+* State machine based implementation
 
 ## Planned
 
-* Conversation state machine
 * Wake word detection
 * Memory
 * Vision support
