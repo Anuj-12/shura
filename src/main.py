@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from numpy import dtype, float32, full
 from enum import Enum, auto
-import sounddevice as sd 
 from typing import Callable
+from collections import deque
+from numpy import dtype, float32
+import sounddevice as sd 
 
 from config import CHANNELS, FRAME_DURATION, STT_SAMPLE_RATE
 
@@ -12,8 +13,6 @@ import assistant
 import vad
 
 TTS_SAMPLE_RATE = tts.sample_rate
-
-# write → buffer → background thread → speakers
 
 """ FSM CONFIGURATION """
 class State(Enum):
@@ -44,12 +43,23 @@ stream_in = sd.InputStream(samplerate=STT_SAMPLE_RATE, channels=CHANNELS, dtype=
 stream_out.start()
 stream_in.start()
 
+pre_buffer = deque(maxlen=20)
+
 """ FSM BASED IMPLEMENTATION """
 state = State.WAITING
 
 # Have to build the full response to append to the history
 full_resp = ""
 prompt = ""
+
+def buffer_audio(frame):
+    pre_buffer.append(frame)
+
+def start_record(frame):
+    stt.capture_buffer.extend(pre_buffer)
+    pre_buffer.clear()
+
+    stt.record(frame)
 
 def record(frame):
     stt.record(frame)
@@ -71,23 +81,28 @@ def respond(frame):
         tts.speak(sentence, stream_out)
         full_resp += sentence
 
-
 def update_history(frame):
     global full_resp
     assistant.update_history(prompt, full_resp)
     full_resp = ""
 
 trans_table = {
-    (State.WAITING, Event.SPEECH_STARTED):
-        Transition(State.RECORDING, record),
+        (State.WAITING, Event.EVENT_NONE):
+        Transition(State.WAITING, buffer_audio),
 
-    (State.RECORDING, Event.SPEECH_ENDED):
+        (State.WAITING, Event.SPEECH_STARTED):
+        Transition(State.RECORDING, start_record),
+
+        (State.RECORDING, Event.SPEECH_ENDED):
         Transition(State.TRANSCRIBING, transcribe),
 
-    (State.TRANSCRIBING, Event.TRANSCRIPTION_ENDED):
+        (State.RECORDING, Event.EVENT_NONE):
+        Transition(State.RECORDING, record),
+
+        (State.TRANSCRIBING, Event.TRANSCRIPTION_ENDED):
         Transition(State.RESPONDING, respond),
 
-    (State.RESPONDING, Event.RESPONSE_DONE):
+        (State.RESPONDING, Event.RESPONSE_DONE):
         Transition(State.WAITING, update_history),
 }
 
@@ -114,6 +129,3 @@ while(True):
             transition.action(frame)
 
         state = transition.next_state
-
-    if state == State.RECORDING:
-        record(frame)

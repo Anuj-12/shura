@@ -8,10 +8,10 @@ _response_done = False
 _history = []
 
 def ask(prompt: str):
-    print("Entered ask")
+    #print("Entered ask")
     global _response_done
     _response_done = False
-    print("Passed response_done flag")
+    #print("Passed response_done flag")
 
     buffer = ""
     full_response = ""

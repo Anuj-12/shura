@@ -23,7 +23,7 @@ def record(frame) -> None:
     # frames / sample_rate = seconds of audio
     # 1024 / 16_000 = 64ms of audio
     # This affects the latency and not the audio quality 
-    '''changed shit for debugging'''
+    # changed shit for debugging
 
     capture_buffer.append(frame)
 
