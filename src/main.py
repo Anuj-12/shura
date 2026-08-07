@@ -43,7 +43,7 @@ stream_in = sd.InputStream(samplerate=STT_SAMPLE_RATE, channels=CHANNELS, dtype=
 stream_out.start()
 stream_in.start()
 
-pre_buffer = deque(maxlen=20)
+pre_buffer = deque(maxlen=40)
 
 """ FSM BASED IMPLEMENTATION """
 state = State.WAITING
@@ -66,6 +66,7 @@ def record(frame):
 
 def transcribe(frame):
     global prompt
+    stt.record(frame)
     prompt = stt.transcribe()
 
 def respond(frame):
@@ -77,9 +78,12 @@ def respond(frame):
     
     print(repr(prompt))
 
-    for sentence in assistant.ask(prompt):
-        tts.speak(sentence, stream_out)
-        full_resp += sentence
+    try:
+        for sentence in assistant.ask(prompt):
+            tts.speak(sentence, stream_out)
+            full_resp += sentence
+    except Exception as e:
+        print("Error generating ollama reponse:", e)
 
 def update_history(frame):
     global full_resp
@@ -112,6 +116,9 @@ while(True):
     event: Event = Event.EVENT_NONE
     frame, overflow = stream_in.read(FRAME_DURATION)
 
+    if overflow:
+        print("[LOG]: Capture frame overflow")
+
     if vad.detect_start(frame):
         event = Event.SPEECH_STARTED
     elif vad.detect_end(frame):
@@ -122,6 +129,7 @@ while(True):
         event = Event.RESPONSE_DONE
 
     """ STATE TRANSITION LOGIC """
+    print(f"[State]:", state, "[Event]:", event)
     # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:

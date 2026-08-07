@@ -4,7 +4,10 @@ import numpy as np
 
 # Agressiveness mode for filtering non-speech
 # 1- no filtering, 3 - high filtering
-vad = webrtcvad.Vad(3)
+vad = webrtcvad.Vad(2)
+
+START_SPEECH_FRAMES = 30
+END_SILENCE_FRAMES = 30
 
 speech_cnt = 0
 silence_cnt = 0
@@ -26,12 +29,12 @@ def detect_start(frame: np.ndarray) -> bool:
     curr_frame_is_speech = vad.is_speech(vad_frame, config.STT_SAMPLE_RATE)
 
     if curr_frame_is_speech:
-        print("Speech Detected")
+        print("[VAD]: Speech Detected")
         speech_cnt += 1
     else:
         speech_cnt = 0
 
-    return speech_cnt >= 7
+    return speech_cnt >= START_SPEECH_FRAMES
     
 def detect_end(frame: np.ndarray) -> bool:
     global silence_cnt
@@ -44,7 +47,7 @@ def detect_end(frame: np.ndarray) -> bool:
     if curr_frame_is_speech:
         silence_cnt = 0
     else:
-        print("Silence Detected")
+        print("[VAD]: Silence Detected")
         silence_cnt += 1
 
-    return silence_cnt >= 7
+    return silence_cnt >= END_SILENCE_FRAMES
