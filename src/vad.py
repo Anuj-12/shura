@@ -1,10 +1,18 @@
 import webrtcvad
 import config
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%I:%M:%S %p',
+                    force=True,
+                    )
 
 # Agressiveness mode for filtering non-speech
 # 1- no filtering, 3 - high filtering
-vad = webrtcvad.Vad(2)
+vad = webrtcvad.Vad(3)
 
 START_SPEECH_FRAMES = 30
 END_SILENCE_FRAMES = 30
@@ -26,10 +34,14 @@ def detect_start(frame: np.ndarray) -> bool:
     # ADC already quantizes once
     frame = (frame * 32767).astype(np.int16)
     vad_frame = frame.tobytes()
-    curr_frame_is_speech = vad.is_speech(vad_frame, config.STT_SAMPLE_RATE)
+    try:
+        curr_frame_is_speech = vad.is_speech(vad_frame, config.STT_SAMPLE_RATE)
+    except Exception as e:
+        logger.error("VAD speech deetection failed:", e)
+        return False;
 
     if curr_frame_is_speech:
-        print("[VAD]: Speech Detected")
+        logger.info("Speech Detected")
         speech_cnt += 1
     else:
         speech_cnt = 0
@@ -47,7 +59,7 @@ def detect_end(frame: np.ndarray) -> bool:
     if curr_frame_is_speech:
         silence_cnt = 0
     else:
-        print("[VAD]: Silence Detected")
+        logger.info("Silence Detected")
         silence_cnt += 1
 
     return silence_cnt >= END_SILENCE_FRAMES

@@ -3,6 +3,14 @@ from tools import ToolError
 from tools.registry import get_tool_schemas
 from tools.registry import TOOLS
 import config
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%I:%M:%S %p',
+                    force=True,
+                    )
 
 _response_done = False
 _history = []

@@ -4,6 +4,7 @@ from typing import Callable
 from collections import deque
 from numpy import dtype, float32
 import sounddevice as sd 
+import logging
 
 from config import CHANNELS, FRAME_DURATION, STT_SAMPLE_RATE
 
@@ -13,6 +14,15 @@ import assistant
 import vad
 
 TTS_SAMPLE_RATE = tts.sample_rate
+
+""" LOGGER CONFIG""" 
+# Name of the logger = module name
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%I:%M:%S %p',
+                    force=True,
+                    )
 
 """ FSM CONFIGURATION """
 class State(Enum):
@@ -36,12 +46,16 @@ class Transition:
 
 
 """ STREAM CONFIGURATION """
-stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
-stream_in = sd.InputStream(samplerate=STT_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
+try:
+    stream_out = sd.OutputStream(samplerate=TTS_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
+    stream_in = sd.InputStream(samplerate=STT_SAMPLE_RATE, channels=CHANNELS, dtype=float32)
 
-# Start and keep the stream open 
-stream_out.start()
-stream_in.start()
+    # Start and keep the stream open 
+    stream_out.start()
+    stream_in.start()
+except Exception as e:
+    logger.error("Error starting the stream: ", e)
+    exit()
 
 pre_buffer = deque(maxlen=40)
 
@@ -83,7 +97,7 @@ def respond(frame):
             tts.speak(sentence, stream_out)
             full_resp += sentence
     except Exception as e:
-        print("Error generating ollama reponse:", e)
+        logger.error("Error generating ollama reponse:", e)
 
 def update_history(frame):
     global full_resp
@@ -117,7 +131,7 @@ while(True):
     frame, overflow = stream_in.read(FRAME_DURATION)
 
     if overflow:
-        print("[LOG]: Capture frame overflow")
+        logger.warning("Capture frame overflow")
 
     if vad.detect_start(frame):
         event = Event.SPEECH_STARTED
@@ -129,11 +143,12 @@ while(True):
         event = Event.RESPONSE_DONE
 
     """ STATE TRANSITION LOGIC """
-    print(f"[State]:", state, "[Event]:", event)
+    logger.debug(f"State- {state}, Event- {event}")
     # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:
         if transition.action:
+            logger.debug(f"Action- {transition.action.__name__}")
             transition.action(frame)
 
         state = transition.next_state

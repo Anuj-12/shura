@@ -10,6 +10,14 @@ import numpy as np
 from typing import List
 import sounddevice as sd
 from faster_whisper import WhisperModel
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s [%(name)s] %(levelname)s: %(message)s',
+                    datefmt='%I:%M:%S %p',
+                    force=True,
+                    )
 
 model_size = "medium.en"
 
@@ -32,6 +40,8 @@ def transcribe() -> str:
     global capture_buffer
     global _transcription_done
     _transcription_done = False
+
+    logger.info("Transcribing")
     
     # Make all the individual signals a single signal
     audio = np.concatenate(capture_buffer, axis=0).squeeze()
@@ -51,6 +61,8 @@ def transcribe() -> str:
 
 def transcription_done() -> bool:
     global _transcription_done
+
+    logger.info("Transcription Done")
 
     if _transcription_done:
         _transcription_done = False
