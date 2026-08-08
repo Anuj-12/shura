@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import Callable
 from collections import deque
 from numpy import dtype, float32
+import numpy as np
 import sounddevice as sd 
 import logging
 
@@ -130,20 +131,27 @@ while(True):
     event: Event = Event.EVENT_NONE
     frame, overflow = stream_in.read(FRAME_DURATION)
 
+    # Trying shit out
+    frame = np.clip(frame * 2, -1.0, 1.0)
+
     if overflow:
         logger.warning("Capture frame overflow")
 
-    if vad.detect_start(frame):
-        event = Event.SPEECH_STARTED
-    elif vad.detect_end(frame):
-        event = Event.SPEECH_ENDED
-    elif stt.transcription_done():
-        event = Event.TRANSCRIPTION_ENDED;
-    elif assistant.response_done():
-        event = Event.RESPONSE_DONE
+    if state == State.WAITING:
+        if vad.detect_start(frame):
+            event = Event.SPEECH_STARTED
+    elif state == State.RECORDING:
+        if vad.detect_end(frame):
+            event = Event.SPEECH_ENDED
+    elif state == State.TRANSCRIBING:
+        if stt.transcription_done():
+            event = Event.TRANSCRIPTION_ENDED
+    elif state == State.RESPONDING:
+        if assistant.response_done():
+            event = Event.RESPONSE_DONE
 
     """ STATE TRANSITION LOGIC """
-    logger.debug(f"State- {state}, Event- {event}")
+    logger.info(f"State- {state}, Event- {event}")
     # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:

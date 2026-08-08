@@ -62,10 +62,10 @@ def transcribe() -> str:
 def transcription_done() -> bool:
     global _transcription_done
 
-    logger.info("Transcription Done")
-
     if _transcription_done:
+        logger.info("Transcription Done")
         _transcription_done = False
+
         return True
 
     return False

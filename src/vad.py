@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO,
 
 # Agressiveness mode for filtering non-speech
 # 1- no filtering, 3 - high filtering
-vad = webrtcvad.Vad(3)
+vad = webrtcvad.Vad(1)
 
 START_SPEECH_FRAMES = 30
 END_SILENCE_FRAMES = 30
@@ -46,7 +46,11 @@ def detect_start(frame: np.ndarray) -> bool:
     else:
         speech_cnt = 0
 
-    return speech_cnt >= START_SPEECH_FRAMES
+    if speech_cnt >= START_SPEECH_FRAMES:
+        speech_cnt = 0
+        return True
+
+    return False
     
 def detect_end(frame: np.ndarray) -> bool:
     global silence_cnt
@@ -62,4 +66,8 @@ def detect_end(frame: np.ndarray) -> bool:
         logger.info("Silence Detected")
         silence_cnt += 1
 
-    return silence_cnt >= END_SILENCE_FRAMES
+    if silence_cnt >= END_SILENCE_FRAMES:
+        silence_cnt = 0
+        return True
+
+    return False
