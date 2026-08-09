@@ -33,6 +33,55 @@ Shura is a fully local AI voice assistant that I built in Python - VAD senses yo
 
 Shura runs on a state machine with four stages: waiting, recording, transcribing, and responding. She's idle and buffering audio until WebRTC VAD detects you've started talking, at which point she starts recording — and keeps recording until VAD detects you've stopped. That audio gets transcribed locally with Faster Whisper, sent to a local Ollama model (with a quick check for whether a tool call is actually needed), and the response streams back sentence-by-sentence through Piper as it's generated, so she starts speaking before the full reply is even ready.
 
+### Architecture Diagram
+```
+WAITING
+   │
+   │ SPEECH_STARTED
+   ▼
+RECORDING
+   │
+   │ SPEECH_ENDED
+   ▼
+TRANSCRIBING
+   │
+   │ TRANSCRIPTION_ENDED
+   ▼
+RESPONDING
+   │
+   │ RESPONSE_DONE
+   ▼
+WAITING
+```
+
+### FSM
+```
+Microphone
+    │
+    ▼
+┌─────────┐
+│   VAD   │
+└────┬────┘
+     │ speech
+     ▼
+┌─────────┐
+│   STT   │
+└────┬────┘
+     │ prompt
+     ▼
+┌───────────┐
+│  Ollama   │
+└─────┬─────┘
+      │ response
+      ▼
+┌─────────┐
+│   TTS   │
+└────┬────┘
+     │
+     ▼
+  Speakers
+```
+
 ## Requirements
 
 1. Python 3.11+
