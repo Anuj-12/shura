@@ -158,12 +158,13 @@ while(True):
             event = Event.RESPONSE_DONE
 
     """ STATE TRANSITION LOGIC """
-    logger.info(f"State- {state}, Event- {event}")
+    logger.debug(f"State- {state}, Event- {event}")
     # get() prevents KeyErrors
     transition = trans_table.get((state, event))
     if transition:
         if transition.action:
             logger.debug(f"Action- {transition.action.__name__}")
             transition.action(frame)
-
         state = transition.next_state
+    elif event != Event.EVENT_NONE:
+        logger.warning(f"Unhandled transition: ({state}, {event}) — dropped")

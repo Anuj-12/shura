@@ -24,10 +24,8 @@ _response_done = False
 _history = []
 
 def ask(prompt: str):
-    #print("Entered ask")
     global _response_done
     _response_done = False
-    #print("Passed response_done flag")
 
     buffer = ""
     full_response = ""
@@ -80,23 +78,24 @@ def ask(prompt: str):
         messages=messages,
     )
 
-    logger.info(messages)
+    logger.debug(messages)
 
     for chunk in stream:
         msg = chunk.message.content
         if msg is None:
             continue
 
-        print(repr(chunk.message.content));
         full_response += msg
         buffer += msg
 
         if any(c in msg for c in ",.!?") and len(buffer) >= config.SPEECH_CHUNK_SIZE:
             yield buffer
+            logger.info(repr(buffer));
             buffer = ""
 
     # flush remaining speech buffer
     if buffer:
+        logger.info(repr(buffer));
         yield buffer
 
     _response_done = True

@@ -41,7 +41,7 @@ def detect_start(frame: np.ndarray) -> bool:
         return False;
 
     if curr_frame_is_speech:
-        logger.info("Speech Detected")
+        logger.debug("Speech Detected")
         speech_cnt += 1
     else:
         speech_cnt = 0
@@ -63,7 +63,7 @@ def detect_end(frame: np.ndarray) -> bool:
     if curr_frame_is_speech:
         silence_cnt = 0
     else:
-        logger.info("Silence Detected")
+        logger.debug("Silence Detected")
         silence_cnt += 1
 
     if silence_cnt >= END_SILENCE_FRAMES:
