@@ -1,44 +1,40 @@
 # Shura
 
-Shura is a local-first voice AI assistant built in Python.
-
-The goal of the project is to create a fast, modular assistant that runs entirely on local hardware while remaining easy to extend.
+Shura is a fully local AI voice assistant that I built in Python - VAD senses you talking, she listens, calls a tool if she *actually* needs to and speaks her response out loud. Every part of this is offline, so no API bills to be dealt with 🥳.
 
 ## Current Features
 
-* 🎙️ Speech-to-Text (Faster Whisper)
-* 🗣️ Text-to-Speech (Piper)
-* 🧠 Local LLM inference (Ollama)
-* 🛠️ Tool calling
-* 🎧 Voice Activity Detection (WebRTC VAD)
-* ⚡ Streaming responses
-* State machine based implementation
+* **Talks back while she's still thinking** -- responses stream and get spoken sentence-by-sentence instead of waiting for the full reply
+* **Short-term memory** -- a single session of conversation builds its context as you continue to chat
+* **Reaches for tools only when she actually needs to** -- most questions are answered straight from the model, without unnecessary tool calls
+* **Fully offline** -- Whisper, Ollama, and Piper all run locally; nothing leaves your machine
+* **Built on an explicit state machine** -- every stage of a conversation (listening, recording, transcribing, responding) is a separate, debuggable state
 
 ## Planned
 
 * Wake word detection
-* Memory
+* Long-term memory
 * Vision support
 * Additional tools
-* Improved speech interruption handling
-* German conversation mode
+* Speech interruption handling
+* German conversation mode (for practicing)
 
 ## Tech Stack
 
-* Python
-* Ollama
-* Faster Whisper
-* Piper
-* WebRTC VAD
-* SoundDevice
-* NumPy
+* **Python**
+* **Ollama + llama3.1:8b** — local LLM inference
+* **Faster Whisper** — speech-to-text
+* **Piper** — text-to-speech
+* **WebRTC VAD** — voice activity detection
+* **SoundDevice** — audio input/output
+* **NumPy** — audio processing
 
-## Status
-
-This project is actively under development and the architecture is evolving as new features are added.
+## Demo
+https://github.com/user-attachments/assets/ebcf215f-4cd3-4321-8d17-74a8ca6eb5a1
 
 ## Known Issues
 
-- STT may occasionally stop detecting speech until restarted.
-- First word of an utterance may be clipped.
-- Tool selection is still conservative and occasionally unnecessary.
+* Tool calls can occasionally produce inconsistent responses depending on the local LLM.
+* Goodbye detection has a few false negatives for less common phrasing.
+* The TTS cleanup is intentionally lightweight and may not handle every form of Markdown formatting.
+* The visualizer/web UI is not included yet and will be developed separately.
