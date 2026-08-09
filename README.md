@@ -41,6 +41,31 @@ Shura runs on a state machine with four stages: waiting, recording, transcribing
 4. PortAudio installed on Linux for `sounddevice`: `sudo apt install libportaudio2`
 5. Runs locally on CPU; Faster Whisper uses the configured compute type for speech recognition
 
+## Usage
+
+### Installation
+
+## Installation
+```bash
+git clone https://github.com/Anuj-12/shura
+cd shura_ai
+
+# Create the environment and install dependencies
+uv sync
+
+# Activate the environment
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+
+# Pull the local model
+ollama pull llama3.1:8b
+```
+
+Change the name of the user in config.py and run by using:
+```bash
+uv run src/main.py
+```
+
+
 ## Demo
 https://github.com/user-attachments/assets/ebcf215f-4cd3-4321-8d17-74a8ca6eb5a1
 
