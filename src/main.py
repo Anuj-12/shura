@@ -69,13 +69,22 @@ full_resp = ""
 prompt = ""
 
 def clean_for_tts(text: str) -> str:
-    # Bold / italic
+    # Bold + italic
+    text = re.sub(r"\*\*\*(.*?)\*\*\*", r"\1", text)
+
+    # Bold
     text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
-    text = re.sub(r"(?<!\*)\*(.*?)\*(?!\*)", r"\1", text)
+
+    # Italic
+    text = re.sub(r"\*(.*?)\*", r"\1", text)
+
+    # Remove any remaining stray asterisks
+    text = text.replace("*", "")
 
     # Underscore emphasis
+    text = re.sub(r"___(.*?)___", r"\1", text)
     text = re.sub(r"__(.*?)__", r"\1", text)
-    text = re.sub(r"(?<!_)_(.*?)_(?!_)", r"\1", text)
+    text = re.sub(r"_(.*?)_", r"\1", text)
 
     return text
 
