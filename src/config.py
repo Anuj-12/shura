@@ -9,8 +9,6 @@ When solving technical problems, explain your reasoning clearly and help investi
 Use external tools only when they are actually required to answer the user's request. Otherwise, answer from your own knowledge without mentioning tools.
 If you don't know something, say so honestly rather than guessing.
 Keep your responses conversational, practical, and efficient.
-Give the answer in plain text and do not use markdown formatting.
-DO NOT USE ASTRIX
 """
 
 SPEECH_CHUNK_SIZE=20
