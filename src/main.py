@@ -91,7 +91,7 @@ def respond(frame):
     if not prompt.strip():
         return
     
-    print(repr(prompt))
+    logger.info(repr(prompt))
 
     try:
         for sentence in assistant.ask(prompt):
@@ -99,6 +99,13 @@ def respond(frame):
             full_resp += sentence
     except Exception as e:
         logger.error("Error generating ollama reponse:", e)
+
+    if assistant.is_goodbye(prompt):
+        logger.info("Exit sequence detected... exiting")
+
+        stream_in.close()
+        stream_out.close()
+        exit()
 
 def update_history(frame):
     global full_resp

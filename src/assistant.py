@@ -5,6 +5,7 @@ from tools.registry import TOOLS
 from tools.filter import detect_tool
 import config
 import logging
+import re
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,
@@ -12,6 +13,12 @@ logging.basicConfig(level=logging.INFO,
                     datefmt='%I:%M:%S %p',
                     force=True,
                     )
+
+GOODBYE_PATTERNS = [
+    r"^\s*(goodbye|bye|bye-bye)\s*[.!]?\s*$",
+    r"^\s*(good night|goodnight)\s*[.!]?\s*$",
+    r"^\s*(see you|see ya|see you later)\s*[.!]?\s*$",
+]
 
 _response_done = False
 _history = []
@@ -32,42 +39,39 @@ def ask(prompt: str):
         {"role": "user", "content": prompt},
     ]
 
-    tool = detect_tool(prompt)
-
-    if tool:
-        print("Possible tool:", tool)
-    else:
-        print("No tool needed")
 
     """ TOOL CALLING """
-    # tool_check = chat(
-    #     model=config.MODEL,
-    #     stream=False,
-    #     think=False,
-    #     messages=messages,
-    #     tools=get_tool_schemas()
-    # )
-    #
-    # if tool_check.message.tool_calls:
-    #     for tc in tool_check.message.tool_calls:
-    #         # Get the tool's instance
-    #         tool = TOOLS[tc.function.name]
-    #         try:
-    #             result = tool.execute(tc.function.arguments)
-    #             messages.append({
-    #                 'role': 'tool',
-    #                 'tool_name': tc.function.name,
-    #                 'content': str(result["result"])
-    #                 })
-    #         except ToolError as e:
-    #             messages.append({
-    #                 'role': 'tool',
-    #                 'tool_name': tc.function.name,
-    #                 'content': "Tool failed to execute"
-    #                 })
-    #         except Exception as e:
-    #             logger.error("Error in tool calling:", e)
-    
+    tool_detect = detect_tool(prompt)
+
+    if tool_detect:
+        tool_check = chat(
+            model=config.MODEL,
+            stream=False,
+            think=False,
+            messages=messages,
+            tools=get_tool_schemas()
+        )
+
+        if tool_check.message.tool_calls:
+            for tc in tool_check.message.tool_calls:
+                # Get the tool's instance
+                tool = TOOLS[tc.function.name]
+                try:
+                    result = tool.execute(tc.function.arguments)
+                    messages.append({
+                        'role': 'tool',
+                        'tool_name': tc.function.name,
+                        'content': str(result["result"])
+                        })
+                except ToolError as e:
+                    messages.append({
+                        'role': 'tool',
+                        'tool_name': tc.function.name,
+                        'content': "Tool failed to execute"
+                        })
+                except Exception as e:
+                    logger.error("Error in tool calling:", e)
+        
     """ STREAMING BUFFER """
     stream = chat(
         model=config.MODEL,
@@ -76,7 +80,7 @@ def ask(prompt: str):
         messages=messages,
     )
 
-    print(messages)
+    logger.info(messages)
 
     for chunk in stream:
         msg = chunk.message.content
@@ -110,3 +114,10 @@ def response_done():
         return True
 
     return False
+
+def is_goodbye(prompt: str) -> bool:
+    return any(
+        re.search(pattern, prompt, re.IGNORECASE)
+        for pattern in GOODBYE_PATTERNS
+    )
+
