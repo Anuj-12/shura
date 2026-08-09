@@ -44,7 +44,7 @@ Shura runs on a state machine with four stages: waiting, recording, transcribing
 
 ## Installation
 ```bash
-git clone https://github.com/Anuj-12/shura
+git clone git@github.com:Anuj-12/shura.git
 cd shura_ai
 
 # Create the environment and install dependencies
