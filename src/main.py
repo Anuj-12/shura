@@ -6,6 +6,7 @@ from numpy import dtype, float32
 import numpy as np
 import sounddevice as sd 
 import logging
+import re
 
 from config import CHANNELS, FRAME_DURATION, STT_SAMPLE_RATE
 
@@ -67,6 +68,17 @@ state = State.WAITING
 full_resp = ""
 prompt = ""
 
+def clean_for_tts(text: str) -> str:
+    # Bold / italic
+    text = re.sub(r"\*\*(.*?)\*\*", r"\1", text)
+    text = re.sub(r"(?<!\*)\*(.*?)\*(?!\*)", r"\1", text)
+
+    # Underscore emphasis
+    text = re.sub(r"__(.*?)__", r"\1", text)
+    text = re.sub(r"(?<!_)_(.*?)_(?!_)", r"\1", text)
+
+    return text
+
 def buffer_audio(frame):
     pre_buffer.append(frame)
 
@@ -90,12 +102,12 @@ def respond(frame):
 
     if not prompt.strip():
         return
-    
+
     logger.info(repr(prompt))
 
     try:
         for sentence in assistant.ask(prompt):
-            tts.speak(sentence, stream_out)
+            tts.speak(clean_for_tts(sentence), stream_out)
             full_resp += sentence
     except Exception as e:
         logger.error("Error generating ollama reponse:", e)
