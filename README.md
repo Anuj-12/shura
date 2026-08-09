@@ -41,9 +41,6 @@ Shura runs on a state machine with four stages: waiting, recording, transcribing
 4. PortAudio installed on Linux for `sounddevice`: `sudo apt install libportaudio2`
 5. Runs locally on CPU; Faster Whisper uses the configured compute type for speech recognition
 
-## Usage
-
-### Installation
 
 ## Installation
 ```bash
