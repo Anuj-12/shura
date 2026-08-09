@@ -2,6 +2,7 @@ from ollama import chat
 from tools import ToolError
 from tools.registry import get_tool_schemas
 from tools.registry import TOOLS
+from tools.filter import detect_tool
 import config
 import logging
 
@@ -31,34 +32,41 @@ def ask(prompt: str):
         {"role": "user", "content": prompt},
     ]
 
-    """ TOOL CALLING """
-    tool_check = chat(
-        model=config.MODEL,
-        stream=False,
-        think=False,
-        messages=messages,
-        tools=get_tool_schemas()
-    )
+    tool = detect_tool(prompt)
 
-    if tool_check.message.tool_calls:
-        for tc in tool_check.message.tool_calls:
-            # Get the tool's instance
-            tool = TOOLS[tc.function.name]
-            try:
-                result = tool.execute(tc.function.arguments)
-                messages.append({
-                    'role': 'tool',
-                    'tool_name': tc.function.name,
-                    'content': str(result["result"])
-                    })
-            except ToolError as e:
-                messages.append({
-                    'role': 'tool',
-                    'tool_name': tc.function.name,
-                    'content': "Tool failed to execute"
-                    })
-            except Exception as e:
-                print("Error in tool calling")
+    if tool:
+        print("Possible tool:", tool)
+    else:
+        print("No tool needed")
+
+    """ TOOL CALLING """
+    # tool_check = chat(
+    #     model=config.MODEL,
+    #     stream=False,
+    #     think=False,
+    #     messages=messages,
+    #     tools=get_tool_schemas()
+    # )
+    #
+    # if tool_check.message.tool_calls:
+    #     for tc in tool_check.message.tool_calls:
+    #         # Get the tool's instance
+    #         tool = TOOLS[tc.function.name]
+    #         try:
+    #             result = tool.execute(tc.function.arguments)
+    #             messages.append({
+    #                 'role': 'tool',
+    #                 'tool_name': tc.function.name,
+    #                 'content': str(result["result"])
+    #                 })
+    #         except ToolError as e:
+    #             messages.append({
+    #                 'role': 'tool',
+    #                 'tool_name': tc.function.name,
+    #                 'content': "Tool failed to execute"
+    #                 })
+    #         except Exception as e:
+    #             logger.error("Error in tool calling:", e)
     
     """ STREAMING BUFFER """
     stream = chat(
